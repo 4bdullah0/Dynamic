@@ -4,10 +4,10 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // const mod = b.addModule("Dynamic", .{
-    //     .root_source_file = b.path("src/root.zig"),
-    //     .target = target,
-    // });
+    const lib = b.addModule("Dynamic", .{
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+    });
 
     const exe = b.addExecutable(.{
         .name = "Dynamic",
@@ -18,8 +18,17 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    const shared_lib = std.Build.Step.Compile.create(b, .{
+        .name = "ChatApp",
+        .kind = .lib,
+        .linkage = .dynamic, // This makes it a shared library so / .dll
+        .root_module = lib,
+    });
+    shared_lib.root_module.pic = true;
+
     b.installArtifact(exe);
 
+    b.installArtifact(shared_lib);
     const run_step = b.step("run", "Run the app");
 
     const run_cmd = b.addRunArtifact(exe);
