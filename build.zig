@@ -19,16 +19,18 @@ pub fn build(b: *std.Build) void {
     });
 
     const shared_lib = std.Build.Step.Compile.create(b, .{
-        .name = "ChatApp",
+        .name = "Dynamic",
         .kind = .lib,
         .linkage = .dynamic, // This makes it a shared library so / .dll
         .root_module = lib,
     });
     shared_lib.root_module.pic = true;
+    const install_dll = b.addInstallArtifact(shared_lib, .{ .dest_dir = .{ .override = .{ .custom = "dynamic" } } });
+
+    const dll_step = b.step("dll", "Only build and produce a DLL");
+    dll_step.dependOn(&install_dll.step);
 
     b.installArtifact(exe);
-
-    b.installArtifact(shared_lib);
     const run_step = b.step("run", "Run the app");
 
     const run_cmd = b.addRunArtifact(exe);
