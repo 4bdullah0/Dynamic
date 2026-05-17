@@ -15,6 +15,7 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         }),
     });
 
@@ -31,6 +32,21 @@ pub fn build(b: *std.Build) void {
     dll_step.dependOn(&install_dll.step);
 
     b.installArtifact(exe);
+    const install_exe_docs = b.addInstallDirectory(.{
+        .source_dir = exe.getEmittedDocs(),
+        .install_dir = .prefix,
+        .install_subdir = "docs/exe",
+    });
+
+    const install_lib_docs = b.addInstallDirectory(.{
+        .source_dir = shared_lib.getEmittedDocs(),
+        .install_dir = .prefix,
+        .install_subdir = "docs/lib",
+    });
+
+    const docs_step = b.step("docs", "Generate documentation for both exe and lib");
+    docs_step.dependOn(&install_exe_docs.step);
+    docs_step.dependOn(&install_lib_docs.step);
     const run_step = b.step("run", "Run the app");
 
     const run_cmd = b.addRunArtifact(exe);
